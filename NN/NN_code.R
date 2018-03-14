@@ -9,20 +9,24 @@ require(ggplot2)
 
 ?neuralnet
 
-#set.seed(123)
+set.seed(123)
 
-d1 <- read.csv ("/Users/muhbandtekamshuru/Desktop/wireless/NN/Weather_2500_6x_1y_AppTemp_y.csv")
+d1 <- read.csv ("/Users/muhbandtekamshuru/Desktop/wireless/NN/Weather_2500_4x_1y.csv")
 
 DataFrame = d1
 
 # add this line to remove non-numeric columns.
 DataFrame <- DataFrame[, sapply(DataFrame, is.numeric)]
 
+d<- DataFrame[,c("Temperature..C.","Humidity","Wind.Speed..km.h.", "Pressure..millibars.")]
+d_cor <- as.matrix(cor(d))
+
+d_cor
 ## find min max and scale 
 maxValue <- apply(DataFrame, 2, max)
 minValue <- apply(DataFrame, 2, min)
 DataFrame <- as.data.frame(scale(DataFrame, center = minValue, scale = maxValue-minValue))
-
+DataFrame
 ?scale
 
 ## train, validation and test data
@@ -43,8 +47,18 @@ predictorVars <- allVars[!allVars%in%"Apparent.Temperature..C."]
 predictorVars <- paste(predictorVars, collapse = "+")
 form=as.formula(paste("Apparent.Temperature..C.~",predictorVars, collapse = "+"))
 
-neuralModel <- neuralnet(formula = form, hidden = c(4,2), linear.output = T, data = trainDF, stepmax=1e6)
+set.seed(123)
 
+sigmoid = function(x) {
+  1 / (1 + exp(-x))
+}
+
+relu = function(x) {log(1+exp(x))}
+
+#neuralModel <- neuralnet(formula = form, hidden = c(4,2), linear.output = T, data = trainDF, stepmax=1e7, algorithm = 'backprop', learningrate = 0.0001, act.fct = "tanh")
+neuralModel <- neuralnet(formula = form, hidden = c(2,2), linear.output = T, data = trainDF, stepmax=1e7,algorithm = "rprop+", act.fct = relu)
+
+neuralModel$result.matrix
 neuralModel
 
 ##neuralModel$net.result[[1]]
@@ -53,13 +67,14 @@ neuralModel
 plot(neuralModel)
 
 ## predict for test data
-predictions <- neuralnet::compute(neuralModel, validDF[, 0:6])
+predictions <- neuralnet::compute(neuralModel, validDF[, 0:4])
 str(predictions)
 
 predictions <- predictions$net.result*(max(validDF$Apparent.Temperature..C.)-min(validDF$Apparent.Temperature..C))+min(validDF$Apparent.Temperature..C)
 actualValues <- (validDF$Apparent.Temperature..C)*(max(validDF$Apparent.Temperature..C) - min(validDF$Apparent.Temperature..C)) + min(validDF$Apparent.Temperature..C)
-predictions
 
+predictions
+actualValues
 #predictions <- compute(neuralModel, testDF[, 0:6])
 #str(predictions)
 
@@ -73,12 +88,21 @@ MSE
 plot(testDF$Temperature..C., predictions, col = 'blue')
 plot(testDF$Temperature..C., actualValues, col = 'red')
 
+#ggplot() +
+ # geom_line(data = validDF, aes(x = validInd, y = Apparent.Temperature..C., color = ticker )) +
+ # geom_line(data = validDF, aes(x = validInd, y = predictions, color = ticker))
 
 ggplot() +
-  geom_line(data = validDF, aes(x = validInd, y = Apparent.Temperature..C., color = "red")) +
-  geom_line(data = validDF, aes(x = validInd, y = predictions, color = "blue"))
+  geom_line(data = trainDF, aes(x = ind, y = Apparent.Temperature..C.)) +
+  geom_point(data = validDF, aes(x = validInd, y = Apparent.Temperature..C., colour = "Actual Values")) +
+  geom_point(data = validDF, aes(x = validInd, y = predictions, colour = "Predicted Values"))+
+  ggtitle("Actual vs Predicted when Temperature(real temperature) is missing among independent attributes") +
+  labs(x = "Index Values", y="Apparent Temperature")
 
-#ggplot() +
- # geom_line(data = trainDF, aes(x = ind, y = Apparent.Temperature..C.)) +
- # geom_point(data = validDF, aes(x = validInd, y = Apparent.Temperature..C., color = "red")) +
- # geom_point(data = validDF, aes(x = validInd, y = predictions, color = "blue"))
+# observation1 neuralModel <- neuralnet(formula = form, hidden = c(2), linear.output = T, data = trainDF, stepmax=1e7, algorithm = 'backprop', learningrate = 0.0001, act.fct = "tanh")
+# observation1 neuralModel <- neuralnet(formula = form, hidden = c(2,2), linear.output = T, data = trainDF, stepmax=1e7, algorithm = 'backprop', learningrate = 0.0001, act.fct = "tanh")
+# observation1 neuralModel <- neuralnet(formula = form, hidden = c(4), linear.output = T, data = trainDF, stepmax=1e7, algorithm = 'backprop', learningrate = 0.0001, act.fct = "tanh")
+# observation1 neuralModel <- neuralnet(formula = form, hidden = c(4,2), linear.output = T, data = trainDF, stepmax=1e7, algorithm = 'backprop', learningrate = 0.0001, act.fct = "tanh")
+# observation2 neuralModel <- neuralnet(formula = form, hidden = c(4,2), linear.output = T, data = trainDF, stepmax=1e7, algorithm = "rprop+, act.fct = "tanh")
+# observation2 neuralModel <- neuralnet(formula = form, hidden = c(4,2), linear.output = T, data = trainDF, stepmax=1e7, algorithm = "rprop+, act.fct = sigmoid)
+# observation3 neuralModel <- neuralnet(formula = form, hidden = c(4,2), linear.output = T, data = trainDF, stepmax=1e7, algorithm = "rprop+, act.fct = relu)

@@ -1,6 +1,6 @@
 #set.seed(123)
 
-d1 <- read.csv ("/Users/muhbandtekamshuru/Desktop/wireless/NN/Weather_2500_NN_6x_1y.csv")
+d1 <- read.csv ("/Users/muhbandtekamshuru/Desktop/wireless/NN/Weather_2500_6x_1y_AppTemp_y.csv")
 
 DataFrame = d1
 
@@ -20,9 +20,9 @@ testInd <- setdiff(remainingInd, validInd)
 testDF <- notNormalizedDF[testInd,]
 
 allVars <- colnames(notNormalizedDF)
-predictorVars <- allVars[!allVars%in%"Temperature..C."]
+predictorVars <- allVars[!allVars%in%"Apparent.Temperature..C."]
 predictorVars <- paste(predictorVars, collapse = "+")
-form=as.formula(paste("Temperature..C.~",predictorVars, collapse = "+"))
+form=as.formula(paste("Apparent.Temperature..C.~",predictorVars, collapse = "+"))
 
 neuralModel <- neuralnet(formula = form, hidden = c(4,2), linear.output = T, data = trainDF, stepmax=1e6)
 
