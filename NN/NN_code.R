@@ -18,7 +18,7 @@ DataFrame = d1
 # add this line to remove non-numeric columns.
 DataFrame <- DataFrame[, sapply(DataFrame, is.numeric)]
 
-d<- DataFrame[,c("Temperature..C.","Humidity","Wind.Speed..km.h.", "Pressure..millibars.")]
+d<- DataFrame[,c("Temperature..C.","Humidity","Wind.Speed..km.h.", "Pressure..millibars.", "Apparent.Temperature..C.")]
 d_cor <- as.matrix(cor(d))
 
 d_cor
@@ -38,7 +38,6 @@ trainDF <- DataFrame[ind,]
 remainingInd <- c(1:2499)[-ind]
 validInd <- sample(remainingInd, 500)
 validDF <- DataFrame[validInd,]
-#testInd <- remainingInd[-validInd]
 testInd <- setdiff(remainingInd, validInd)
 testDF <- DataFrame[testInd,]
 
@@ -56,7 +55,7 @@ sigmoid = function(x) {
 relu = function(x) {log(1+exp(x))}
 
 #neuralModel <- neuralnet(formula = form, hidden = c(4,2), linear.output = T, data = trainDF, stepmax=1e7, algorithm = 'backprop', learningrate = 0.0001, act.fct = "tanh")
-neuralModel <- neuralnet(formula = form, hidden = c(2,2), linear.output = T, data = trainDF, stepmax=1e7,algorithm = "rprop+", act.fct = relu)
+neuralModel <- neuralnet(formula = form, hidden = c(2,2), linear.output = T, data = trainDF, stepmax=1e7,algorithm = "rprop+", act.fct = "tanh")
 
 neuralModel$result.matrix
 neuralModel
@@ -93,10 +92,9 @@ plot(testDF$Temperature..C., actualValues, col = 'red')
  # geom_line(data = validDF, aes(x = validInd, y = predictions, color = ticker))
 
 ggplot() +
-  geom_line(data = trainDF, aes(x = ind, y = Apparent.Temperature..C.)) +
-  geom_point(data = validDF, aes(x = validInd, y = Apparent.Temperature..C., colour = "Actual Values")) +
-  geom_point(data = validDF, aes(x = validInd, y = predictions, colour = "Predicted Values"))+
-  ggtitle("Actual vs Predicted when Temperature(real temperature) is missing among independent attributes") +
+  geom_line(data = validDF, aes(x = validInd, y = Apparent.Temperature..C., colour = "Actual Values")) +
+  geom_line(data = validDF, aes(x = validInd, y = predictions, colour = "Predicted Values"))+
+  ggtitle("Actual vs Predicted when Temperature(real temperature) is present among independent attributes") +
   labs(x = "Index Values", y="Apparent Temperature")
 
 # observation1 neuralModel <- neuralnet(formula = form, hidden = c(2), linear.output = T, data = trainDF, stepmax=1e7, algorithm = 'backprop', learningrate = 0.0001, act.fct = "tanh")
